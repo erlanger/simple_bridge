@@ -12,8 +12,8 @@ run(Bridge) ->
     try
         Bridge2 = Bridge:set_response_data(body(Bridge)),
         Bridge2:build_response()
-    catch E:C ->
-        error_logger:error_msg("~p:~p: ~p",[E, C, erlang:get_stacktrace()]),
+    catch E:C:S ->
+        error_logger:error_msg("~p:~p: ~p",[E, C, S]),
         exit("Error building response")
     end.
 
@@ -62,14 +62,14 @@ body(Bridge) ->
             <input type='text' id='server' value='ws://localhost:8000/'></input>
             <button type='button' onclick='toggle_connection()'>(re)connect websocket</button>
           </p>
-          <div id='connected'>                                
+          <div id='connected'>
             <p>
               <input type='text' id='send_txt' value=''></input>
               <button type='button' onclick='sendTxt();'>send</button>
             </p>
           </div>
 
-          <div id='content'>                                                
+          <div id='content'>
             <button id='clear' onclick='clearScreen()' >Clear text</button>
             <div id='output'></div>
           </div>

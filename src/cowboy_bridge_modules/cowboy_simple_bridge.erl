@@ -45,8 +45,8 @@ get_key(ReqKey) ->
     try
         RequestCache = #request_cache{request = Req} = cowboy_request_server:get(ReqKey),
         {RequestCache, Req}
-    catch E:T ->
-        error_logger:info_msg("~p:~p~n~p", [E, T, erlang:get_stacktrace()])
+    catch E:T:S ->
+        error_logger:info_msg("~p:~p~n~p", [E, T, S])
     end.
 
 put_key(ReqKey, NewRequestCache) ->
@@ -187,15 +187,15 @@ build_response(ReqKey, Res) ->
             %% as much as possible. The cowboy static handler is designed for
             %% this task, but this is put here to help the programmer in the
             %% case of a misconfiguration.
-            %% 
+            %%
             %% You want to make sure that cowboy.config is properly set
             %% up with paths so that the requests for static files are
             %% properly handled by cowboy directly.
-            %% 
+            %%
             %% See https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/etc/cowboy.config
             %% and
             %% https://github.com/nitrogen/nitrogen/blob/master/rel/overlay/cowboy/site/src/nitrogen_sup.erl
- 
+
             Path = strip_leading_slash(P),
             Mimetype = get_mimetype(Path),
             Headers2 = simple_bridge_util:ensure_header(Headers,{"Content-Type", Mimetype}),
@@ -204,7 +204,7 @@ build_response(ReqKey, Res) ->
             {ok, FinReq} = case filelib:is_regular(FullPath) of
                 false ->
                     send(404, [], [], "Not Found", Req);
-                true -> 
+                true ->
                     Body = stream_body(FullPath),
                     send(200, Headers3, [], Body, Req)
             end,
@@ -238,7 +238,7 @@ send(Code, Headers, Cookies, Body, Req) ->
     Req1 = prepare_cookies(Req, Cookies),
     Req2 = prepare_headers(Req1, Headers),
     Req3 = case Body of
-        {stream, Size, Fun} -> 
+        {stream, Size, Fun} ->
             cowboy_req:set_resp_body_fun(Size, Fun, Req2);
         {stream, Fun} ->
             cowboy_req:set_resp_body_fun(Fun, Req2);

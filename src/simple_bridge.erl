@@ -77,31 +77,31 @@ make(BridgeType, Req) ->
 make(BridgeType, Req, _DocRoot) ->
     Module = make_bridge_module(BridgeType),
     inner_make(Module, Req).
-    
+
 make_bridge_module(BridgeType) ->
     list_to_atom(atom_to_list(BridgeType) ++ "_simple_bridge").
 
 inner_make(Module, RequestData) ->
     try
         make_nocatch(Module, RequestData)
-    catch Type : Error ->
-        error_logger:error_msg("Error in simple_bridge:make/2 - ~p - ~p~n~p", [Type, Error, erlang:get_stacktrace()]),
+    catch Type : Error : StackTrace ->
+        error_logger:error_msg("Error in simple_bridge:make/2 - ~p - ~p~n~p", [Type, Error, StackTrace]),
         erlang:Type(Error)
     end.
 
-make_nocatch(Module, RequestData) -> 
+make_nocatch(Module, RequestData) ->
     RequestData1 = Module:init(RequestData),
     Bridge = sbw:new(Module, RequestData1),
     case simple_bridge_multipart:parse(Bridge) of
-        {ok, PostParams, Files} -> 
+        {ok, PostParams, Files} ->
             %% Post Params are read from the multipart parsing
             sbw:set_multipart(PostParams, Files, Bridge);
-        {ok, not_multipart} -> 
+        {ok, not_multipart} ->
             %% But if it's not a multipart post, then we need to manually tell
             %% simple bridge to cache the post params in the wrapper for quick
             %% lookup
             sbw:cache_post_params(Bridge);
-        {error, Error} -> 
+        {error, Error} ->
             Bridge:set_error(Error)
     end.
 
@@ -147,7 +147,7 @@ fix_old_modules(mochiweb_response_bridge) -> mochiweb_simple_bridge;
 fix_old_modules(webmachine_request_bridge) -> webmachine_simple_bridge;
 fix_old_modules(webmachine_response_bridge) -> webmachine_simple_bridge;
 %% wow
-%% 
+%%
 %%     so long error msg
 %%
 %%  such descriptive
